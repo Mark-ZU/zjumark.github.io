@@ -81,9 +81,9 @@ search:
   insight: true # you need to install `hexo-generator-json-content` before using Insight Search
   baidu: false # you need to disable other search engines to use Baidu search
 
-# # Donate
-# donate:
-#   enable: false
+# Donate
+donate:
+  enable: false
 #   # 微信打赏
 #   wechatpay:
 #     qrcode: images/donate/wechatpayimg.png
@@ -95,8 +95,8 @@ search:
 
 # Share
 # weibo,qq,qzone,wechat,tencent,douban,diandian,facebook,twitter,google,linkedin
-# share:
-#   enable: true  # 是否启用分享
+share:
+  enable: false  # 是否启用分享
 #   sites: weibo,qq,wechat,facebook,twitter  # PC端显示的分享图标
 #   mobile_sites: weibo,qq,qzone  # 移动端显示的分享图标
 
