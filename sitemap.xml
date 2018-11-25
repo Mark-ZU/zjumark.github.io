@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://zjumark.github.io/2018/11/25/QtQuick-Qml-%E4%B8%AD%E7%9A%84Model%E4%BD%BF%E7%94%A8/</loc>
+    
+    <lastmod>2018-11-25T15:22:27.017Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://zjumark.github.io/2018/11/15/Ubuntu%E4%B8%8B%E7%9A%84alfred%E6%9B%BF%E4%BB%A3%E8%BD%AF%E4%BB%B6%E4%BB%A5%E5%8F%8A%E6%9C%89%E9%81%93%E8%AF%8D%E5%85%B8%E6%8F%92%E4%BB%B6/</loc>
     
     <lastmod>2018-11-14T17:18:51.738Z</lastmod>
@@ -9,16 +16,16 @@
   </url>
   
   <url>
-    <loc>http://zjumark.github.io/repository/index.html</loc>
+    <loc>http://zjumark.github.io/2018/11/15/hello-world/</loc>
     
-    <lastmod>2018-11-02T09:00:48.527Z</lastmod>
+    <lastmod>2018-11-14T17:02:16.088Z</lastmod>
     
   </url>
   
   <url>
-    <loc>http://zjumark.github.io/2018/11/02/hello-world/</loc>
+    <loc>http://zjumark.github.io/repository/index.html</loc>
     
-    <lastmod>2018-11-01T18:12:02.452Z</lastmod>
+    <lastmod>2018-11-02T09:00:48.527Z</lastmod>
     
   </url>
   

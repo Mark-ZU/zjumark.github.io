@@ -6,10 +6,53 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://zjumark.github.io/"/>
-  <updated>2018-11-14T17:18:51.738Z</updated>
+  <updated>2018-11-25T15:22:27.017Z</updated>
   <id>http://zjumark.github.io/</id>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>QtQuick(Qml)中的Model使用</title>
+    <link href="http://zjumark.github.io/2018/11/25/QtQuick-Qml-%E4%B8%AD%E7%9A%84Model%E4%BD%BF%E7%94%A8/"/>
+    <id>http://zjumark.github.io/2018/11/25/QtQuick-Qml-中的Model使用/</id>
+    <published>2018-11-25T15:20:02.000Z</published>
+    <updated>2018-11-25T15:22:27.017Z</updated>
+    
+    <content type="html"><![CDATA[<p>在Qml使用中，会遇到使用<code>Repeater</code>或者<code>ListView</code>之类的东西，如果这些需要展示的数据在c++层面，数据的频繁更新或者数据的惰性更新会需要使用到<code>Model</code>。</p><p>与<code>Model</code>对应一起使用的是<code>Delegate</code>，分别代表的是数据原型以及显示方式，这非常符合MVC。(<a href="http://doc-snapshots.qt.io/qt5-5.11/qtquick-modelviewsdata-modelview.html" target="_blank" rel="noopener">相关概念及使用样例</a>)</p><p>在Qml中，更复杂的<code>Model</code>需要有c++ class来书写，本文提供一种方便与c++数据进行交互的方法。</p><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Global</span> :</span> <span class="keyword">public</span> QObject&#123;</span><br><span class="line">    Q_OBJECT</span><br><span class="line">signals:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">widthChanged</span><span class="params">(<span class="keyword">int</span>)</span></span>;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">typedef</span> Singleton&lt;Global&gt; G;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DataModel</span> :</span> <span class="keyword">public</span> QAbstractListModel&#123;</span><br><span class="line">    Q_OBJECT</span><br><span class="line"><span class="keyword">public</span> slots:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">widthChanged</span><span class="params">(<span class="keyword">int</span> i)</span></span>&#123; <span class="function">emit <span class="title">dataChanged</span><span class="params">(createIndex(i,<span class="number">0</span>),createIndex(i,<span class="number">0</span>))</span></span>; &#125;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">DataModel</span><span class="params">(QObject *parent = Q_NULLPTR)</span></span>;</span><br><span class="line">    <span class="keyword">virtual</span> ~DataModel()&#123;&#125;</span><br><span class="line">    <span class="keyword">enum</span> Roles &#123; WidthRole = Qt::UserRole + <span class="number">1</span> &#125;;</span><br><span class="line">    Q_ENUM(Roles)</span><br><span class="line">    QHash&lt;<span class="keyword">int</span>, QByteArray&gt; roleNames() <span class="keyword">const</span> ;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">rowCount</span><span class="params">(<span class="keyword">const</span> QModelIndex &amp;parent = QModelIndex())</span> <span class="keyword">const</span> override</span>;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">columnCount</span><span class="params">(<span class="keyword">const</span> QModelIndex &amp;parent = QModelIndex())</span> <span class="keyword">const</span> override</span>;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> QVariant <span class="title">data</span><span class="params">(<span class="keyword">const</span> QModelIndex &amp;index, <span class="keyword">int</span> role = Qt::DisplayRole)</span> <span class="keyword">const</span> override</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure><p>以上代码是一个Model的Demo样例，值得注意的是三个重载的函数<code>rowCount</code>、<code>columnCount</code>以及<code>data</code>和一个信号<code>dataChanged</code>，这三个函数是由Qml进行调用，获取Model的行列值以及获取特定位置的值的，而在行列值不变的情况下，需要更新数据只需要触发<code>dataChanged</code>信号即可。若出现了行列值改变的情况，则需要进行重新渲染，流程如下:</p><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">reload</span><span class="params">()</span></span>&#123;</span><br><span class="line">    beginResetModel();</span><br><span class="line">    ...</span><br><span class="line">    endResetModel();</span><br><span class="line">    <span class="keyword">this</span>-&gt;resetInternalData();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>api函数均可以通过Qt Reference找到，这里就不详细解释了。</p><p><a href="https://github.com/ZJUMark/MarkPlayground/tree/master/QtModelDemo" target="_blank" rel="noopener">完整Demo地址</a></p><p><img src="1543159049742.png" alt="1543159049742"></p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;在Qml使用中，会遇到使用&lt;code&gt;Repeater&lt;/code&gt;或者&lt;code&gt;ListView&lt;/code&gt;之类的东西，如果这些需要展示的数据在c++层面，数据的频繁更新或者数据的惰性更新会需要使用到&lt;code&gt;Model&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;与&lt;code&gt;
+      
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Hello World</title>
+    <link href="http://zjumark.github.io/2018/11/15/hello-world/"/>
+    <id>http://zjumark.github.io/2018/11/15/hello-world/</id>
+    <published>2018-11-14T17:02:16.088Z</published>
+    <updated>2018-11-14T17:02:16.088Z</updated>
+    
+    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;Welcome to &lt;a href=&quot;https://hexo.io/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Hexo&lt;/a&gt;! This is your very first post. Check &lt;a href=&quot;https://hexo.
+      
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>Ubuntu下的alfred替代软件以及有道词典插件</title>
@@ -26,27 +69,6 @@
       
         &lt;p&gt;习惯于Mac下alfred的使用后，换成Ubuntu或者Windows会时常想起这个快捷好用的软件，平常的计算器，应用搜索，甚至于查询天气，查字典，查api等都很顺手。在Windows下，可以使用Wox进行替代，在Ubuntu下可以使用Albert进行替代。&lt;/p&gt;
 &lt;p&gt;
-      
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>Hello World</title>
-    <link href="http://zjumark.github.io/2018/11/02/hello-world/"/>
-    <id>http://zjumark.github.io/2018/11/02/hello-world/</id>
-    <published>2018-11-01T18:12:02.452Z</published>
-    <updated>2018-11-01T18:12:02.452Z</updated>
-    
-    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;Welcome to &lt;a href=&quot;https://hexo.io/&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;Hexo&lt;/a&gt;! This is your very first post. Check &lt;a href=&quot;https://hexo.
       
     
     </summary>

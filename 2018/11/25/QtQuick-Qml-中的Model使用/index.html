@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000">
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top">
+  
+  
+  <title>QtQuick(Qml)中的Model使用 | Mark&#39;s Page</title>
+  <meta name="description" content="在Qml使用中，会遇到使用Repeater或者ListView之类的东西，如果这些需要展示的数据在c++层面，数据的频繁更新或者数据的惰性更新会需要使用到Model。 与Model对应一起使用的是Delegate，分别代表的是数据原型以及显示方式，这非常符合MVC。(相关概念及使用样例) 在Qml中，更复杂的Model需要有c++ class来书写，本文提供一种方便与c++数据进行交互的方法。 1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="QtQuick(Qml)中的Model使用">
+<meta property="og:url" content="http://zjumark.github.io/2018/11/25/QtQuick-Qml-中的Model使用/index.html">
+<meta property="og:site_name" content="Mark&#39;s Page">
+<meta property="og:description" content="在Qml使用中，会遇到使用Repeater或者ListView之类的东西，如果这些需要展示的数据在c++层面，数据的频繁更新或者数据的惰性更新会需要使用到Model。 与Model对应一起使用的是Delegate，分别代表的是数据原型以及显示方式，这非常符合MVC。(相关概念及使用样例) 在Qml中，更复杂的Model需要有c++ class来书写，本文提供一种方便与c++数据进行交互的方法。 1">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="http://zjumark.github.io/2018/11/25/QtQuick-Qml-中的Model使用/1543159049742.png">
+<meta property="og:updated_time" content="2018-11-25T15:22:27.017Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="QtQuick(Qml)中的Model使用">
+<meta name="twitter:description" content="在Qml使用中，会遇到使用Repeater或者ListView之类的东西，如果这些需要展示的数据在c++层面，数据的频繁更新或者数据的惰性更新会需要使用到Model。 与Model对应一起使用的是Delegate，分别代表的是数据原型以及显示方式，这非常符合MVC。(相关概念及使用样例) 在Qml中，更复杂的Model需要有c++ class来书写，本文提供一种方便与c++数据进行交互的方法。 1">
+<meta name="twitter:image" content="http://zjumark.github.io/2018/11/25/QtQuick-Qml-中的Model使用/1543159049742.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="http://zjumark.github.io/2018/11/25/QtQuick-Qml-中的Model使用/index.html">
+  
+  
+    <link rel="icon" href="images/m.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/ZJUMark" target="_blank">
+          <img class="img-circle img-rotate" src="/images/m.png" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">Mark</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md"></h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Hangzhou, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search">
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech="">
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope="" itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/ZJUMark" target="_blank" title="Github" data-toggle="tooltip" data-placement="top"><i class="icon icon-github"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope="" itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-QtQuick-Qml-中的Model使用" class="article article-type-post" itemscope="" itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      QtQuick(Qml)中的Model使用
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2018/11/25/QtQuick-Qml-中的Model使用/" class="article-date">
+	  <time datetime="2018-11-25T15:20:02.000Z" itemprop="datePublished">2018-11-25</time>
+	</a>
+</span>
+        
+        
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2018/11/25/QtQuick-Qml-中的Model使用/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p>在Qml使用中，会遇到使用<code>Repeater</code>或者<code>ListView</code>之类的东西，如果这些需要展示的数据在c++层面，数据的频繁更新或者数据的惰性更新会需要使用到<code>Model</code>。</p>
+<p>与<code>Model</code>对应一起使用的是<code>Delegate</code>，分别代表的是数据原型以及显示方式，这非常符合MVC。(<a href="http://doc-snapshots.qt.io/qt5-5.11/qtquick-modelviewsdata-modelview.html" target="_blank" rel="noopener">相关概念及使用样例</a>)</p>
+<p>在Qml中，更复杂的<code>Model</code>需要有c++ class来书写，本文提供一种方便与c++数据进行交互的方法。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Global</span> :</span> <span class="keyword">public</span> QObject&#123;</span><br><span class="line">    Q_OBJECT</span><br><span class="line">signals:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">widthChanged</span><span class="params">(<span class="keyword">int</span>)</span></span>;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">typedef</span> Singleton&lt;Global&gt; G;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DataModel</span> :</span> <span class="keyword">public</span> QAbstractListModel&#123;</span><br><span class="line">    Q_OBJECT</span><br><span class="line"><span class="keyword">public</span> slots:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">widthChanged</span><span class="params">(<span class="keyword">int</span> i)</span></span>&#123; <span class="function">emit <span class="title">dataChanged</span><span class="params">(createIndex(i,<span class="number">0</span>),createIndex(i,<span class="number">0</span>))</span></span>; &#125;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">DataModel</span><span class="params">(QObject *parent = Q_NULLPTR)</span></span>;</span><br><span class="line">    <span class="keyword">virtual</span> ~DataModel()&#123;&#125;</span><br><span class="line">    <span class="keyword">enum</span> Roles &#123; WidthRole = Qt::UserRole + <span class="number">1</span> &#125;;</span><br><span class="line">    Q_ENUM(Roles)</span><br><span class="line">    QHash&lt;<span class="keyword">int</span>, QByteArray&gt; roleNames() <span class="keyword">const</span> ;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">rowCount</span><span class="params">(<span class="keyword">const</span> QModelIndex &amp;parent = QModelIndex())</span> <span class="keyword">const</span> override</span>;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">columnCount</span><span class="params">(<span class="keyword">const</span> QModelIndex &amp;parent = QModelIndex())</span> <span class="keyword">const</span> override</span>;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> QVariant <span class="title">data</span><span class="params">(<span class="keyword">const</span> QModelIndex &amp;index, <span class="keyword">int</span> role = Qt::DisplayRole)</span> <span class="keyword">const</span> override</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>以上代码是一个Model的Demo样例，值得注意的是三个重载的函数<code>rowCount</code>、<code>columnCount</code>以及<code>data</code>和一个信号<code>dataChanged</code>，这三个函数是由Qml进行调用，获取Model的行列值以及获取特定位置的值的，而在行列值不变的情况下，需要更新数据只需要触发<code>dataChanged</code>信号即可。若出现了行列值改变的情况，则需要进行重新渲染，流程如下:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">reload</span><span class="params">()</span></span>&#123;</span><br><span class="line">    beginResetModel();</span><br><span class="line">    ...</span><br><span class="line">    endResetModel();</span><br><span class="line">    <span class="keyword">this</span>-&gt;resetInternalData();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>api函数均可以通过Qt Reference找到，这里就不详细解释了。</p>
+<p><a href="https://github.com/ZJUMark/MarkPlayground/tree/master/QtModelDemo" target="_blank" rel="noopener">完整Demo地址</a></p>
+<p><img src="1543159049742.png" alt="1543159049742"></p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="http://zjumark.github.io/2018/11/25/QtQuick-Qml-中的Model使用/" title="QtQuick(Qml)中的Model使用" target="_blank" rel="external">http://zjumark.github.io/2018/11/25/QtQuick-Qml-中的Model使用/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/ZJUMark" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/m.png" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/ZJUMark" target="_blank"><span class="text-dark">Mark</span><small class="ml-1x"></small></a></h3>
+        <div></div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom="">
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    
+    <li class="next">
+      <a href="/2018/11/15/hello-world/" title="Hello World"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope="" itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/ZJUMark" target="_blank" title="Github" data-toggle="tooltip" data-placement="top"><i class="icon icon-github"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>
