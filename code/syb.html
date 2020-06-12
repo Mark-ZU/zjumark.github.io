@@ -27,16 +27,6 @@
                 $("#dateTime").append('<div class="time">同步时间：' + dateTime + '</div>');
             }
 
-            // // 已删除
-            // if ('1' == '1') {
-            //     colour = 'CCCCCC';
-            // }
-            // // 核酸检测为是
-            // if ('否' == '是') {
-            //     colour = 'EB6E18';
-            // }
-
-            var account = '21932037';
             jQuery('#output').qrcode({
                 render: "table",
                 width: 180,
@@ -48,20 +38,6 @@
 
             });
         })
-
-        function getJkm() {
-            var datas = '';
-            $.ajax({
-                type: "GET",
-                url: "/pass_code/jkm?account=12345678&cardNo=330481199610156019&identity=3",
-                async: false,
-                dataType: 'json',
-                success: function (data) {
-                    datas = data;
-                }
-            });
-            return datas;
-        }
 
         if (true) {
             //获取系统时间
@@ -85,20 +61,6 @@
             function p(s) {
                 return s < 10 ? '0' + s : s;
             }
-        }
-
-        function getJkm() {
-            var datas = '';
-            $.ajax({
-                type: "GET",
-                url: "/pass_code/jkm?account=12032023&cardNo=230204199509261933&identity=3",
-                async: false,
-                dataType: 'json',
-                success: function (data) {
-                    datas = data;
-                }
-            });
-            return datas;
         }
 
     </script>
@@ -130,7 +92,7 @@
     </div>
     <div class="bottom-tip">
         <h3>安 保 处 ：0571-88206110</h3>
-        <a href="http://xwfw.zju.edu.cn/mobile/redir.php?catalog_id=371039" target="_blank" class="link-btn">常见问题</a>
+        <a href="" target="_blank" class="link-btn">常见问题</a>
         <h3>技术支持：0571-87951669</h3>
     </div>
 </body>
